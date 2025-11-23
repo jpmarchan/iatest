@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Legal de Voz STT</title>
+    <!-- Carga de Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Importar la fuente Inter y estilos base */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2ff; /* Un azul claro muy suave */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background-image: linear-gradient(to top right, #eef2ff, #f3f4f6);
+        }
+        /* Ajuste de grosor de trazo para los iconos de Lucide */
+        .lucide {
+            stroke-width: 2.5;
+        }
+        /* Animación personalizada para el botón de grabación (Modernizado) */
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 25px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+        .animate-pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Estilo para el reproductor de audio */
+        #audioPlayer::-webkit-media-controls-panel {
+            background-color: #3b82f6;
+            border-radius: 0 0 8px 8px;
+        }
+        #audioPlayer::-webkit-media-controls-play-button,
+        #audioPlayer::-webkit-media-controls-current-time-display,
+        #audioPlayer::-webkit-media-controls-time-remaining-display {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor Principal con Estilo de Tarjeta Moderna -->
+    <div id="voiceAssistantCard" class="bg-white shadow-2xl rounded-2xl p-6 md:p-10 w-full max-w-xl transition-all duration-500 border-t-8 border-blue-600/70 backdrop-blur-sm">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <i data-lucide="gavel" class="lucide w-12 h-12 text-blue-600 mx-auto mb-2"></i>
+            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Asistente Legal de Voz</h1>
+            <p class="text-sm text-gray-500 mt-1">Soluciones rápidas y seguras. V2V (Voz a Voz).</p>
+        </div>
+
+        <!-- Área de Usuario (se oculta si el usuario está definido) -->
+        <div id="usernameDisplay" class="hidden text-base text-gray-600 mb-6 flex items-center justify-center bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span id="currentUsername" class="font-bold text-blue-700 ml-2"></span>
+        </div>
+        
+        <!-- Formulario de Nombre (se oculta si el usuario está definido) -->
+        <form id="nameForm" class="mt-4 mb-6 flex gap-3">
+            <input
+                id="nameInput"
+                type="text"
+                placeholder="Ingresa tu nombre para identificarte..."
+                required
+                class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition duration-200 shadow-inner"
+            />
+            <button type="submit" class="bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg active:scale-95">
+                <i data-lucide="send" class="lucide w-5 h-5"></i>
+            </button>
+        </form>
+
+        <!-- Área de Estado -->
+        <div id="statusArea" class="p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner">
+            <p id="statusMessage" class="text-base leading-relaxed">Presiona el micrófono para INICIAR la consulta.</p>
+        </div>
+
+        <!-- Transcripción mostrada -->
+        <div id="transcriptionBox" class="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-8 border border-blue-200 shadow-lg hidden">
+            <span class="font-bold block mb-1">Tu consulta (Vista Previa):</span> 
+            <span id="transcriptionPreview" class="block italic text-gray-700"></span>
+        </div>
+        
+        <!-- Controles de Voz -->
+        <div class="flex justify-center">
+            <!-- Botón de Iniciar/Detener (Toggle Mode) - Más grande y con mejores efectos -->
+            <button
+                id="voiceToggleButton"
+                class="p-7 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white w-24 h-24 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
+                title="Presiona para INICIAR la grabación"
+                disabled
+            >
+                <!-- Icono de Micrófono por defecto -->
+                <i id="micIcon" data-lucide="mic" class="lucide w-10 h-10"></i>
+                <!-- El icono de carga se mostrará en el estado 'loading' -->
+                <i id="loaderIcon" data-lucide="loader-2" class="lucide w-10 h-10 animate-spin hidden"></i>
+                <!-- El icono de detener se mostrará en el estado 'recording' -->
+                <i id="stopIcon" data-lucide="square" class="lucide w-10 h-10 hidden"></i>
+            </button>
+        </div>
+
+        <!-- Reproductor de Audio -->
+        <div id="audioContainer" class="mt-10 pt-5 border-t border-gray-100 hidden">
+            <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center">
+                <i data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del Asesor IA
+            </h3>
+            <audio 
+                id="audioPlayer" 
+                controls 
+                class="w-full rounded-xl h-12 shadow-inner border-2 border-blue-300 bg-blue-50"
+            ></audio>
+        </div>
+
+    </div>
+
+    <script>
+        // URL de tu endpoint de backend que recibe TEXTO y devuelve AUDIO TTS
+        const TEXT_QUERY_URL = "https://286272f9581f.ngrok-free.app/api/text_query";
+
+        // === ESTADO GLOBAL ===
+        const appState = {
+            isRecording: false,
+            isLoading: false,
+            responseAudioUrl: null,
+            transcriptionPreview: "",
+            statusMessage: "Presiona el micrófono para INICIAR la consulta.",
+            username: "",
+            hasSent: false, // Bandera para evitar doble envío
+            finalTranscript: "", // Para guardar la transcripción final más reciente
+            recognition: null,
+            // Referencias DOM
+            dom: {
+                statusArea: null,
+                statusMessage: null,
+                transcriptionBox: null,
+                transcriptionPreview: null,
+                voiceToggleButton: null,
+                micIcon: null,
+                loaderIcon: null,
+                stopIcon: null,
+                audioContainer: null,
+                audioPlayer: null,
+                nameForm: null,
+                nameInput: null,
+                usernameDisplay: null,
+                currentUsername: null
+            }
+        };
+
+        // === UTILIDADES INTERNAS ===
+
+        /**
+         * Actualiza el estado visual de la UI basándose en el estado global.
+         * Esta función reemplaza la funcionalidad de renderizado de React.
+         */
+        function updateUI() {
+            const { isRecording, isLoading, statusMessage, transcriptionPreview, responseAudioUrl, username } = appState;
+            const { 
+                statusArea, statusMessage: statusMsgEl, transcriptionBox, transcriptionPreview: transcriptPrevEl, 
+                voiceToggleButton, micIcon, loaderIcon, stopIcon, audioContainer, 
+                nameForm, usernameDisplay, currentUsername 
+            } = appState.dom;
+
+            // 1. Manejo del Usuario
+            nameForm.classList.toggle('hidden', !!username);
+            usernameDisplay.classList.toggle('hidden', !username);
+            if (username) {
+                currentUsername.textContent = username;
+            }
+
+            // Si no hay usuario, deshabilitar el botón principal y salir
+            if (!username) {
+                voiceToggleButton.disabled = true;
+                statusMsgEl.textContent = "❌ Por favor, ingresa tu nombre antes de comenzar.";
+                // Reset status area for error state
+                statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner bg-red-100 text-red-800 border border-red-300';
+                return;
+            } else {
+                // Re-enable button only if not loading
+                voiceToggleButton.disabled = isLoading || !appState.recognition;
+            }
+
+            // 2. Transcripción
+            const showTranscription = !!transcriptionPreview;
+            transcriptionBox.classList.toggle('hidden', !showTranscription);
+            transcriptPrevEl.textContent = transcriptionPreview;
+
+            // 3. Área de Estado y Mensaje
+            statusMsgEl.textContent = statusMessage;
+            
+            // Limpiar clases de fondo del status area
+            statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner';
+
+            let statusClasses = 'bg-gray-100 text-gray-600 border border-gray-200';
+            const isError = statusMessage.includes('❌') || statusMessage.includes('Error') || statusMessage.includes('⚠️');
+
+            if (isLoading) {
+                statusClasses = 'bg-blue-100 text-blue-800 border border-blue-300';
+            } else if (isRecording) {
+                statusClasses = 'bg-red-100 text-red-800 border border-red-300';
+            } else if (isError) {
+                statusClasses = 'bg-red-100 text-red-800 border border-red-300';
+            } else if (responseAudioUrl) {
+                statusClasses = 'bg-green-100 text-green-800 border border-green-300';
+            }
+            statusArea.classList.add(...statusClasses.split(' '));
+
+            // 4. Botón de Toggle y Iconos
+            voiceToggleButton.classList.remove(
+                'bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-red-500/50', 
+                'bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/50'
+            );
+            
+            micIcon.classList.add('hidden');
+            loaderIcon.classList.add('hidden');
+            stopIcon.classList.add('hidden');
+
+            if (isLoading) {
+                voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
+                voiceToggleButton.title = "Procesando...";
+                loaderIcon.classList.remove('hidden');
+            } else if (isRecording) {
+                voiceToggleButton.classList.add('bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-xl', 'shadow-red-500/50');
+                voiceToggleButton.title = "Presiona para DETENER la grabación y enviar";
+                stopIcon.classList.remove('hidden');
+            } else {
+                voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
+                voiceToggleButton.title = "Presiona para INICIAR la grabación";
+                micIcon.classList.remove('hidden');
+            }
+
+            // 5. Audio Player
+            audioContainer.classList.toggle('hidden', !responseAudioUrl);
+            if (responseAudioUrl) {
+                appState.dom.audioPlayer.src = responseAudioUrl;
+            }
+        }
+
+        /**
+         * Maneja errores y restablece el estado.
+         * @param {string} message Mensaje de error a mostrar.
+         */
+        function showCustomError(message) {
+            console.error(message);
+            
+            // 1. Limpieza de estado
+            appState.isLoading = false;
+            appState.isRecording = false;
+            appState.hasSent = false;
+            appState.finalTranscript = "";
+            appState.statusMessage = message;
+
+            // 2. Abortar STT si está activo
+            if (appState.recognition) {
+                try {
+                    appState.recognition.abort();
+                } catch (e) {
+                    // Ignore InvalidStateError during abort
+                }
+            }
+
+            // 3. Actualizar UI
+            updateUI();
+        }
+
+        /**
+         * Lógica para enviar la consulta de TEXTO al backend.
+         * @param {string} textToSend El texto final transcrito.
+         */
+        async function sendTextQuery(textToSend) {
+            const cleanedText = textToSend.trim();
+            if (!cleanedText || appState.hasSent) {
+                if (!cleanedText && !appState.isLoading) showCustomError("⚠️ No se detectó ninguna consulta de voz válida.");
+                return;
+            }
+            
+            appState.hasSent = true;
+            appState.isLoading = true;
+            appState.isRecording = false; // Aseguramos que el visual de grabación se detenga
+            appState.statusMessage = "✅ Transcripción capturada. Enviando al Asesor IA...";
+            updateUI();
+            
+            // Limpiar URL anterior si existe
+            if (appState.responseAudioUrl) {
+                URL.revokeObjectURL(appState.responseAudioUrl);
+                appState.responseAudioUrl = null;
+            }
+
+            try {
+                // 1. Envío de la consulta de texto
+                const response = await fetch(TEXT_QUERY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        query_text: cleanedText,
+                        username: appState.username, 
+                    }),
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `Error del servidor (Status: ${response.status}).`;
+                    try {
+                        const errorJson = await response.json();
+                        errorDetails = errorJson.message || JSON.stringify(errorJson); 
+                    } catch {}
+                    throw new Error(errorDetails);
+                }
+                
+                // 2. Esperamos un Blob de audio (TTS)
+                const audioResponseBlob = await response.blob();
+                
+                if (audioResponseBlob.size === 0) {
+                    throw new Error("El audio de respuesta está vacío o no es válido.");
+                }
+
+                // 3. Reproducción Automática
+                const url = URL.createObjectURL(audioResponseBlob);
+                appState.responseAudioUrl = url;
+                
+                // Actualizar la UI antes de intentar reproducir
+                appState.statusMessage = "✅ Asesoría recibida. Intentando reproducir automáticamente...";
+                updateUI();
+
+                // Usamos un pequeño delay para asegurar que el elemento <audio> haya cargado el nuevo src
+                setTimeout(async () => {
+                    const audioPlayer = appState.dom.audioPlayer;
+                    if (audioPlayer) {
+                        try {
+                            await audioPlayer.play();
+                            appState.statusMessage = "✅ Asesoría recibida. Reproduciendo automáticamente...";
+                        } catch (e) {
+                            console.warn("Fallo la reproducción automática, el usuario debe hacer clic en Play:", e);
+                            appState.statusMessage = "✅ Asesoría recibida. (Fallo Autoplay. ¡Debes presionar Play manualmente!)";
+                        }
+                        updateUI();
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.error("Error en la consulta al backend:", error.message);
+                showCustomError(`❌ Error en la consulta: ${error.message}.`);
+            } finally {
+                appState.isLoading = false;
+                updateUI();
+            }
+        }
+
+
+        /**
+         * Inicializa la Web Speech API y sus eventos.
+         */
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                showCustomError("⚠️ Navegador no compatible con Web Speech API para STT.");
+                return;
+            }
+            
+            const recognition = appState.recognition || new webkitSpeechRecognition();
+            recognition.continuous = true; 
+            recognition.interimResults = true;
+            recognition.lang = 'es-ES'; 
+            appState.recognition = recognition;
+            
+            // Almacena el texto final acumulado mientras se graba
+            appState.finalTranscript = "";
+
+            recognition.onresult = (event) => {
+                let finalTranscriptPart = '';
+                let interimTranscriptPart = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        // Concatenar resultados finales para acumular frases
+                        finalTranscriptPart += event.results[i][0].transcript;
+                    } else {
+                        // Almacenar el resultado interino (en curso)
+                        interimTranscriptPart += event.results[i][0].transcript;
+                    }
+                }
+                
+                // 1. Actualizar la referencia del texto final acumulado
+                if (finalTranscriptPart) {
+                    appState.finalTranscript += finalTranscriptPart;
+                }
+                
+                // 2. Actualizar la vista previa (final acumulado + interino en curso)
+                appState.transcriptionPreview = appState.finalTranscript + interimTranscriptPart;
+                updateUI();
+            };
+
+            recognition.onerror = (event) => {
+                // Solo manejar el error si aún no hemos enviado (evita errores post-envío)
+                if (appState.hasSent) return; 
+
+                if (event.error === 'not-allowed') {
+                    showCustomError("❌ Acceso al micrófono bloqueado. Debes permitirlo en la configuración.");
+                } else if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
+                    showCustomError(`❌ Error de STT (${event.error}). Intenta de nuevo.`);
+                }
+                appState.isRecording = false;
+                updateUI();
+            };
+
+            recognition.onend = () => {
+                // Solo cambiar el estado si no estamos esperando una respuesta del backend (loading) o ya se envió
+                if (!appState.hasSent && !appState.isLoading) {
+                    appState.isRecording = false;
+                    appState.statusMessage = "Grabación detenida. Presiona para empezar de nuevo.";
+                    updateUI();
+                }
+            };
+
+            // Asegurarse de que el botón está habilitado después de la inicialización exitosa
+            appState.dom.voiceToggleButton.disabled = appState.isLoading || !appState.username;
+            updateUI();
+        }
+
+        /**
+         * Lógica principal para iniciar o detener la grabación.
+         */
+        function handleVoiceToggle() {
+            if (!appState.recognition || appState.isLoading) return;
+            if (!appState.username) {
+                showCustomError("❌ Por favor, ingresa tu nombre antes de comenzar.");
+                return;
+            }
+
+            if (appState.isRecording) {
+                // Caso 1: Estaba grabando -> Detener y ENVIAR
+                appState.isRecording = false;
+                appState.statusMessage = "Deteniendo, esperando transcripción final...";
+                updateUI();
+                
+                // 1. Detener la API de Voz (esto dispara el evento 'onresult' con el texto final)
+                try {
+                    appState.recognition.stop(); 
+                } catch (e) {
+                    console.warn("Error al llamar a recognition.stop().", e);
+                }
+
+                // 2. AÑADIMOS UN PEQUEÑO RETRASO (CRUCIAL para móviles) 
+                // para dar tiempo a que 'onresult' actualice appState.finalTranscript
+                setTimeout(() => {
+                    let textToSend = appState.finalTranscript.trim();
+                    
+                    // FALLBACK: Si la referencia interna está vacía, usamos el texto de la vista previa
+                    if (!textToSend && appState.transcriptionPreview.trim()) {
+                        textToSend = appState.transcriptionPreview.trim();
+                        console.log("Usando texto de fallback (Vista Previa) para enviar:", textToSend);
+                    }
+
+                    // 3. ENVIAR
+                    if (textToSend) {
+                        sendTextQuery(textToSend);
+                    } else {
+                        // Si incluso después del retraso no hay texto, mostramos el error
+                        showCustomError("⚠️ No se detectó ninguna consulta de voz válida.");
+                    }
+                    
+                    // Limpiamos la vista previa después de tomar la decisión
+                    appState.transcriptionPreview = "";
+                    updateUI();
+                }, 50); // Retraso de 50ms (suficiente para sincronización móvil)
+
+
+            } else {
+                // Caso 2: No estaba grabando -> Iniciar grabación
+                
+                // Limpiar estados anteriores
+                appState.responseAudioUrl = null;
+                appState.transcriptionPreview = "";
+                appState.hasSent = false;
+                appState.finalTranscript = "";
+                
+                try {
+                    // Intentar abortar cualquier estado anterior antes de empezar (limpia el motor STT)
+                    appState.recognition.abort();
+                    
+                    appState.recognition.start();
+                    appState.isRecording = true;
+                    appState.statusMessage = "🔴 Grabando Audio. Presiona de nuevo para DETENER y enviar.";
+                    updateUI();
+                } catch (error) {
+                    if (error.name !== 'InvalidStateError') {
+                        showCustomError(`❌ Error al iniciar grabación: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Maneja el envío del formulario de nombre de usuario.
+         */
+        function handleNameSubmit(event) {
+            event.preventDefault();
+            const input = appState.dom.nameInput.value.trim();
+            if (input) {
+                appState.username = input;
+                localStorage.setItem('v2v_username', input);
+                appState.statusMessage = "Listo. Presiona el micrófono para INICIAR la consulta.";
+                updateUI();
+            }
+        }
+
+        /**
+         * Inicializa la aplicación: obtiene referencias DOM y carga el estado inicial.
+         */
+        function initializeApp() {
+            // 1. Obtener Referencias DOM (Reemplazo de useRef)
+            appState.dom.statusArea = document.getElementById('statusArea');
+            appState.dom.statusMessage = document.getElementById('statusMessage');
+            appState.dom.transcriptionBox = document.getElementById('transcriptionBox');
+            appState.dom.transcriptionPreview = document.getElementById('transcriptionPreview');
+            appState.dom.voiceToggleButton = document.getElementById('voiceToggleButton');
+            appState.dom.micIcon = document.getElementById('micIcon');
+            appState.dom.loaderIcon = document.getElementById('loaderIcon');
+            appState.dom.stopIcon = document.getElementById('stopIcon');
+            appState.dom.audioContainer = document.getElementById('audioContainer');
+            appState.dom.audioPlayer = document.getElementById('audioPlayer');
+            appState.dom.nameForm = document.getElementById('nameForm');
+            appState.dom.nameInput = document.getElementById('nameInput');
+            appState.dom.usernameDisplay = document.getElementById('usernameDisplay');
+            appState.dom.currentUsername = document.getElementById('currentUsername');
+
+            // 2. Cargar Estado Inicial (Reemplazo de useEffect con [])
+            const storedName = localStorage.getItem('v2v_username');
+            if (storedName) {
+                appState.username = storedName;
+                appState.statusMessage = "Listo. Presiona el micrófono para INICIAR la consulta.";
+            } else {
+                appState.statusMessage = "Por favor, ingresa tu nombre para comenzar.";
+            }
+
+            // 3. Inicializar Speech Recognition
+            initSpeechRecognition();
+
+            // 4. Configurar Event Listeners (Reemplazo de onClick/onSubmit)
+            appState.dom.voiceToggleButton.addEventListener('click', handleVoiceToggle);
+            appState.dom.nameForm.addEventListener('submit', handleNameSubmit);
+            
+            // 5. Renderizado Inicial
+            updateUI();
+            
+            // Inicializar Lucide Icons después de que el DOM esté listo
+            lucide.createIcons();
+        }
+
+        // Ejecutar la inicialización cuando el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Agregamos un listener de limpieza para revocar la URL del Blob al salir o recargar
+        window.addEventListener('beforeunload', () => {
+            if (appState.responseAudioUrl) {
+                URL.revokeObjectURL(appState.responseAudioUrl);
+            }
+        });
+
+    </script>
+
+</body>
+</html>
