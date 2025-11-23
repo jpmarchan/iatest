@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente Legal de Voz STT</title>
+    <title>Asistente Legal de Voz STT y TTS Nativo</title>
     <!-- Carga de Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Lucide Icons -->
@@ -25,7 +25,7 @@
         .lucide {
             stroke-width: 2.5;
         }
-        /* Animación personalizada para el botón de grabación (Modernizado) */
+        /* Animación personalizada para el botón de grabación */
         @keyframes pulse-red {
             0% {
                 box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
@@ -40,16 +40,18 @@
         .animate-pulse-red {
             animation: pulse-red 2s infinite;
         }
-
-        /* Estilo para el reproductor de audio */
-        #audioPlayer::-webkit-media-controls-panel {
-            background-color: #3b82f6;
-            border-radius: 0 0 8px 8px;
+        /* Clase de animación para el icono de voz activa */
+        .speak-active {
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
+            animation: pulse-blue 1s infinite alternate;
         }
-        #audioPlayer::-webkit-media-controls-play-button,
-        #audioPlayer::-webkit-media-controls-current-time-display,
-        #audioPlayer::-webkit-media-controls-time-remaining-display {
-            color: white;
+        @keyframes pulse-blue {
+            from {
+                opacity: 0.7;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -62,15 +64,15 @@
         <div class="text-center mb-8">
             <i data-lucide="gavel" class="lucide w-12 h-12 text-blue-600 mx-auto mb-2"></i>
             <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Asistente Legal de Voz</h1>
-            <p class="text-sm text-gray-500 mt-1">Soluciones rápidas y seguras. V2V (Voz a Voz).</p>
+            <p class="text-sm text-gray-500 mt-1">Soluciones rápidas con STT y TTS nativo (Voz a Texto a Voz).</p>
         </div>
 
-        <!-- Área de Usuario (se oculta si el usuario está definido) -->
+        <!-- Área de Usuario -->
         <div id="usernameDisplay" class="hidden text-base text-gray-600 mb-6 flex items-center justify-center bg-gray-50 p-3 rounded-xl border border-gray-200">
             <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span id="currentUsername" class="font-bold text-blue-700 ml-2"></span>
         </div>
         
-        <!-- Formulario de Nombre (se oculta si el usuario está definido) -->
+        <!-- Formulario de Nombre -->
         <form id="nameForm" class="mt-4 mb-6 flex gap-3">
             <input
                 id="nameInput"
@@ -89,7 +91,7 @@
             <p id="statusMessage" class="text-base leading-relaxed">Presiona el micrófono para INICIAR la consulta.</p>
         </div>
 
-        <!-- Transcripción mostrada -->
+        <!-- Transcripción mostrada (Consulta del Usuario) -->
         <div id="transcriptionBox" class="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-8 border border-blue-200 shadow-lg hidden">
             <span class="font-bold block mb-1">Tu consulta (Vista Previa):</span> 
             <span id="transcriptionPreview" class="block italic text-gray-700"></span>
@@ -97,7 +99,7 @@
         
         <!-- Controles de Voz -->
         <div class="flex justify-center">
-            <!-- Botón de Iniciar/Detener (Toggle Mode) - Más grande y con mejores efectos -->
+            <!-- Botón de Iniciar/Detener (Toggle Mode) -->
             <button
                 id="voiceToggleButton"
                 class="p-7 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white w-24 h-24 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
@@ -113,35 +115,37 @@
             </button>
         </div>
 
-        <!-- Reproductor de Audio -->
-        <div id="audioContainer" class="mt-10 pt-5 border-t border-gray-100 hidden">
+        <!-- Respuesta de Texto y TTS (Nuevo) -->
+        <div id="responseContainer" class="mt-10 pt-5 border-t border-gray-100 hidden">
             <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center">
-                <i data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del Asesor IA
+                <i id="voiceIcon" data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del Asesor IA
             </h3>
-            <audio 
-                id="audioPlayer" 
-                controls 
-                class="w-full rounded-xl h-12 shadow-inner border-2 border-blue-300 bg-blue-50"
-            ></audio>
+            <div id="responseText" class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200 shadow-inner text-gray-800 min-h-[6rem] whitespace-pre-wrap">
+                <!-- El texto de la respuesta se insertará aquí -->
+            </div>
         </div>
 
     </div>
 
     <script>
-        // URL de tu endpoint de backend que recibe TEXTO y devuelve AUDIO TTS
+        // URL de tu endpoint de backend que recibe TEXTO y devuelve TEXTO JSON
         const TEXT_QUERY_URL = "https://286272f9581f.ngrok-free.app/api/text_query";
+        
+        // El nombre de la propiedad en el JSON que contendrá la respuesta de texto.
+        const RESPONSE_TEXT_FIELD = "response_text";
 
         // === ESTADO GLOBAL ===
         const appState = {
             isRecording: false,
             isLoading: false,
-            responseAudioUrl: null,
+            isSpeaking: false, // Nuevo estado para TTS
             transcriptionPreview: "",
             statusMessage: "Presiona el micrófono para INICIAR la consulta.",
             username: "",
             hasSent: false, // Bandera para evitar doble envío
             finalTranscript: "", // Para guardar la transcripción final más reciente
-            recognition: null,
+            recognition: null, // Para STT
+            utterance: null, // Para TTS
             // Referencias DOM
             dom: {
                 statusArea: null,
@@ -152,8 +156,9 @@
                 micIcon: null,
                 loaderIcon: null,
                 stopIcon: null,
-                audioContainer: null,
-                audioPlayer: null,
+                responseContainer: null, // Nuevo
+                responseText: null, // Nuevo
+                voiceIcon: null, // Nuevo
                 nameForm: null,
                 nameInput: null,
                 usernameDisplay: null,
@@ -165,14 +170,13 @@
 
         /**
          * Actualiza el estado visual de la UI basándose en el estado global.
-         * Esta función reemplaza la funcionalidad de renderizado de React.
          */
         function updateUI() {
-            const { isRecording, isLoading, statusMessage, transcriptionPreview, responseAudioUrl, username } = appState;
+            const { isRecording, isLoading, isSpeaking, statusMessage, transcriptionPreview, username } = appState;
             const { 
                 statusArea, statusMessage: statusMsgEl, transcriptionBox, transcriptionPreview: transcriptPrevEl, 
-                voiceToggleButton, micIcon, loaderIcon, stopIcon, audioContainer, 
-                nameForm, usernameDisplay, currentUsername 
+                voiceToggleButton, micIcon, loaderIcon, stopIcon, 
+                nameForm, usernameDisplay, currentUsername, voiceIcon, responseContainer
             } = appState.dom;
 
             // 1. Manejo del Usuario
@@ -186,12 +190,10 @@
             if (!username) {
                 voiceToggleButton.disabled = true;
                 statusMsgEl.textContent = "❌ Por favor, ingresa tu nombre antes de comenzar.";
-                // Reset status area for error state
                 statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner bg-red-100 text-red-800 border border-red-300';
                 return;
             } else {
-                // Re-enable button only if not loading
-                voiceToggleButton.disabled = isLoading || !appState.recognition;
+                voiceToggleButton.disabled = isLoading || isSpeaking || !appState.recognition;
             }
 
             // 2. Transcripción
@@ -214,7 +216,7 @@
                 statusClasses = 'bg-red-100 text-red-800 border border-red-300';
             } else if (isError) {
                 statusClasses = 'bg-red-100 text-red-800 border border-red-300';
-            } else if (responseAudioUrl) {
+            } else if (isSpeaking) {
                 statusClasses = 'bg-green-100 text-green-800 border border-green-300';
             }
             statusArea.classList.add(...statusClasses.split(' '));
@@ -222,17 +224,18 @@
             // 4. Botón de Toggle y Iconos
             voiceToggleButton.classList.remove(
                 'bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-red-500/50', 
-                'bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/50'
+                'bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/50', 'bg-green-600', 'hover:bg-green-700'
             );
             
             micIcon.classList.add('hidden');
             loaderIcon.classList.add('hidden');
             stopIcon.classList.add('hidden');
 
-            if (isLoading) {
+            if (isLoading || isSpeaking) {
                 voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
-                voiceToggleButton.title = "Procesando...";
-                loaderIcon.classList.remove('hidden');
+                voiceToggleButton.title = isSpeaking ? "Asesorando..." : "Procesando...";
+                loaderIcon.classList.remove('hidden'); // Usamos el loader para ambos estados de espera/habla
+                voiceIcon.classList.toggle('speak-active', isSpeaking);
             } else if (isRecording) {
                 voiceToggleButton.classList.add('bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-xl', 'shadow-red-500/50');
                 voiceToggleButton.title = "Presiona para DETENER la grabación y enviar";
@@ -241,13 +244,12 @@
                 voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
                 voiceToggleButton.title = "Presiona para INICIAR la grabación";
                 micIcon.classList.remove('hidden');
+                voiceIcon.classList.remove('speak-active');
             }
 
-            // 5. Audio Player
-            audioContainer.classList.toggle('hidden', !responseAudioUrl);
-            if (responseAudioUrl) {
-                appState.dom.audioPlayer.src = responseAudioUrl;
-            }
+            // 5. Contenedor de Respuesta
+            const showResponse = responseContainer && appState.dom.responseText.textContent.trim() !== '';
+            responseContainer.classList.toggle('hidden', !showResponse);
         }
 
         /**
@@ -264,17 +266,73 @@
             appState.finalTranscript = "";
             appState.statusMessage = message;
 
-            // 2. Abortar STT si está activo
+            // 2. Abortar STT y TTS si están activos
             if (appState.recognition) {
                 try {
                     appState.recognition.abort();
-                } catch (e) {
-                    // Ignore InvalidStateError during abort
-                }
+                } catch (e) {}
             }
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            appState.isSpeaking = false;
 
-            // 3. Actualizar UI
+            // 3. Limpiar respuesta de texto
+            appState.dom.responseText.textContent = '';
+
+
+            // 4. Actualizar UI
             updateUI();
+        }
+
+        /**
+         * Utiliza la API de Síntesis de Voz del navegador para leer el texto.
+         * @param {string} text El texto a leer.
+         */
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                // Cancelar cualquier discurso previo
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
+
+                // Configuración de la voz
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES'; 
+                // Opcional: Intentar encontrar una voz en español
+                const voices = window.speechSynthesis.getVoices();
+                const spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
+                if (spanishVoice) {
+                    utterance.voice = spanishVoice;
+                }
+
+                appState.utterance = utterance;
+
+                // Eventos de inicio y fin
+                utterance.onstart = () => {
+                    appState.isSpeaking = true;
+                    appState.statusMessage = "🔊 El Asesor IA está hablando...";
+                    updateUI();
+                };
+
+                utterance.onend = () => {
+                    appState.isSpeaking = false;
+                    appState.statusMessage = "✅ Asesoría finalizada. Presiona el micrófono para otra consulta.";
+                    appState.finalTranscript = ""; // Limpiar después de la respuesta completa
+                    updateUI();
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('Error de SpeechSynthesis:', event.error);
+                    showCustomError("⚠️ Error en la Síntesis de Voz del navegador.");
+                };
+
+                // Iniciar la lectura
+                window.speechSynthesis.speak(utterance);
+
+            } else {
+                showCustomError("⚠️ Síntesis de Voz (TTS) no compatible con este navegador.");
+            }
         }
 
         /**
@@ -290,16 +348,11 @@
             
             appState.hasSent = true;
             appState.isLoading = true;
-            appState.isRecording = false; // Aseguramos que el visual de grabación se detenga
+            appState.isRecording = false; 
             appState.statusMessage = "✅ Transcripción capturada. Enviando al Asesor IA...";
+            appState.dom.responseText.textContent = ''; // Limpiar respuesta anterior
             updateUI();
             
-            // Limpiar URL anterior si existe
-            if (appState.responseAudioUrl) {
-                URL.revokeObjectURL(appState.responseAudioUrl);
-                appState.responseAudioUrl = null;
-            }
-
             try {
                 // 1. Envío de la consulta de texto
                 const response = await fetch(TEXT_QUERY_URL, {
@@ -322,42 +375,30 @@
                     throw new Error(errorDetails);
                 }
                 
-                // 2. Esperamos un Blob de audio (TTS)
-                const audioResponseBlob = await response.blob();
-                
-                if (audioResponseBlob.size === 0) {
-                    throw new Error("El audio de respuesta está vacío o no es válido.");
+                // 2. Esperamos una respuesta JSON con el texto
+                const responseJson = await response.json();
+                const aiResponseText = responseJson[RESPONSE_TEXT_FIELD]; 
+
+                if (!aiResponseText || typeof aiResponseText !== 'string') {
+                    throw new Error("Respuesta de texto de la IA no válida o vacía.");
                 }
 
-                // 3. Reproducción Automática
-                const url = URL.createObjectURL(audioResponseBlob);
-                appState.responseAudioUrl = url;
+                // 3. Mostrar Texto en la UI
+                appState.dom.responseText.textContent = aiResponseText;
                 
-                // Actualizar la UI antes de intentar reproducir
-                appState.statusMessage = "✅ Asesoría recibida. Intentando reproducir automáticamente...";
+                // 4. Iniciar Síntesis de Voz
+                appState.isLoading = false;
+                appState.statusMessage = "Respuesta recibida. Iniciando síntesis de voz...";
                 updateUI();
-
-                // Usamos un pequeño delay para asegurar que el elemento <audio> haya cargado el nuevo src
-                setTimeout(async () => {
-                    const audioPlayer = appState.dom.audioPlayer;
-                    if (audioPlayer) {
-                        try {
-                            await audioPlayer.play();
-                            appState.statusMessage = "✅ Asesoría recibida. Reproduciendo automáticamente...";
-                        } catch (e) {
-                            console.warn("Fallo la reproducción automática, el usuario debe hacer clic en Play:", e);
-                            appState.statusMessage = "✅ Asesoría recibida. (Fallo Autoplay. ¡Debes presionar Play manualmente!)";
-                        }
-                        updateUI();
-                    }
-                }, 100);
+                speakText(aiResponseText);
 
             } catch (error) {
                 console.error("Error en la consulta al backend:", error.message);
                 showCustomError(`❌ Error en la consulta: ${error.message}.`);
             } finally {
-                appState.isLoading = false;
-                updateUI();
+                // El estado 'isLoading' se desactiva antes de 'speakText'
+                // El estado 'isSpeaking' se desactiva en 'utterance.onend'
+                // Si hay un error, 'showCustomError' maneja el cleanup.
             }
         }
 
@@ -377,7 +418,6 @@
             recognition.lang = 'es-ES'; 
             appState.recognition = recognition;
             
-            // Almacena el texto final acumulado mientras se graba
             appState.finalTranscript = "";
 
             recognition.onresult = (event) => {
@@ -386,26 +426,25 @@
                 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        // Concatenar resultados finales para acumular frases
                         finalTranscriptPart += event.results[i][0].transcript;
                     } else {
-                        // Almacenar el resultado interino (en curso)
                         interimTranscriptPart += event.results[i][0].transcript;
                     }
                 }
                 
-                // 1. Actualizar la referencia del texto final acumulado
                 if (finalTranscriptPart) {
+                    // Solo agregamos un espacio si ya hay texto final acumulado
+                    if (appState.finalTranscript.length > 0) {
+                        appState.finalTranscript += ' ';
+                    }
                     appState.finalTranscript += finalTranscriptPart;
                 }
                 
-                // 2. Actualizar la vista previa (final acumulado + interino en curso)
                 appState.transcriptionPreview = appState.finalTranscript + interimTranscriptPart;
                 updateUI();
             };
 
             recognition.onerror = (event) => {
-                // Solo manejar el error si aún no hemos enviado (evita errores post-envío)
                 if (appState.hasSent) return; 
 
                 if (event.error === 'not-allowed') {
@@ -418,15 +457,13 @@
             };
 
             recognition.onend = () => {
-                // Solo cambiar el estado si no estamos esperando una respuesta del backend (loading) o ya se envió
-                if (!appState.hasSent && !appState.isLoading) {
+                if (!appState.hasSent && !appState.isLoading && !appState.isSpeaking) {
                     appState.isRecording = false;
                     appState.statusMessage = "Grabación detenida. Presiona para empezar de nuevo.";
                     updateUI();
                 }
             };
 
-            // Asegurarse de que el botón está habilitado después de la inicialización exitosa
             appState.dom.voiceToggleButton.disabled = appState.isLoading || !appState.username;
             updateUI();
         }
@@ -435,7 +472,7 @@
          * Lógica principal para iniciar o detener la grabación.
          */
         function handleVoiceToggle() {
-            if (!appState.recognition || appState.isLoading) return;
+            if (!appState.recognition || appState.isLoading || appState.isSpeaking) return;
             if (!appState.username) {
                 showCustomError("❌ Por favor, ingresa tu nombre antes de comenzar.");
                 return;
@@ -447,50 +484,47 @@
                 appState.statusMessage = "Deteniendo, esperando transcripción final...";
                 updateUI();
                 
-                // 1. Detener la API de Voz (esto dispara el evento 'onresult' con el texto final)
                 try {
                     appState.recognition.stop(); 
                 } catch (e) {
                     console.warn("Error al llamar a recognition.stop().", e);
                 }
 
-                // 2. AÑADIMOS UN PEQUEÑO RETRASO (CRUCIAL para móviles) 
-                // para dar tiempo a que 'onresult' actualice appState.finalTranscript
+                // CRUCIAL: Retraso para capturar el último onresult final
                 setTimeout(() => {
                     let textToSend = appState.finalTranscript.trim();
                     
-                    // FALLBACK: Si la referencia interna está vacía, usamos el texto de la vista previa
                     if (!textToSend && appState.transcriptionPreview.trim()) {
+                        // Fallback por si la API no actualizó finalTranscript a tiempo
                         textToSend = appState.transcriptionPreview.trim();
                         console.log("Usando texto de fallback (Vista Previa) para enviar:", textToSend);
                     }
 
-                    // 3. ENVIAR
                     if (textToSend) {
                         sendTextQuery(textToSend);
                     } else {
-                        // Si incluso después del retraso no hay texto, mostramos el error
                         showCustomError("⚠️ No se detectó ninguna consulta de voz válida.");
                     }
                     
-                    // Limpiamos la vista previa después de tomar la decisión
                     appState.transcriptionPreview = "";
                     updateUI();
-                }, 50); // Retraso de 50ms (suficiente para sincronización móvil)
+                }, 100); 
 
 
             } else {
                 // Caso 2: No estaba grabando -> Iniciar grabación
                 
                 // Limpiar estados anteriores
-                appState.responseAudioUrl = null;
+                if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+                appState.isSpeaking = false;
                 appState.transcriptionPreview = "";
+                appState.dom.responseText.textContent = ''; // Limpiar texto de respuesta
                 appState.hasSent = false;
                 appState.finalTranscript = "";
                 
                 try {
-                    // Intentar abortar cualquier estado anterior antes de empezar (limpia el motor STT)
-                    appState.recognition.abort();
+                    // Abortar cualquier estado anterior antes de empezar (limpia el motor STT)
+                    if (appState.recognition) appState.recognition.abort();
                     
                     appState.recognition.start();
                     appState.isRecording = true;
@@ -522,7 +556,7 @@
          * Inicializa la aplicación: obtiene referencias DOM y carga el estado inicial.
          */
         function initializeApp() {
-            // 1. Obtener Referencias DOM (Reemplazo de useRef)
+            // 1. Obtener Referencias DOM
             appState.dom.statusArea = document.getElementById('statusArea');
             appState.dom.statusMessage = document.getElementById('statusMessage');
             appState.dom.transcriptionBox = document.getElementById('transcriptionBox');
@@ -531,14 +565,18 @@
             appState.dom.micIcon = document.getElementById('micIcon');
             appState.dom.loaderIcon = document.getElementById('loaderIcon');
             appState.dom.stopIcon = document.getElementById('stopIcon');
-            appState.dom.audioContainer = document.getElementById('audioContainer');
-            appState.dom.audioPlayer = document.getElementById('audioPlayer');
+            
+            // Referencias para la nueva respuesta de texto/TTS
+            appState.dom.responseContainer = document.getElementById('responseContainer');
+            appState.dom.responseText = document.getElementById('responseText');
+            appState.dom.voiceIcon = document.getElementById('voiceIcon');
+            
             appState.dom.nameForm = document.getElementById('nameForm');
             appState.dom.nameInput = document.getElementById('nameInput');
             appState.dom.usernameDisplay = document.getElementById('usernameDisplay');
             appState.dom.currentUsername = document.getElementById('currentUsername');
-
-            // 2. Cargar Estado Inicial (Reemplazo de useEffect con [])
+            
+            // 2. Cargar Estado Inicial
             const storedName = localStorage.getItem('v2v_username');
             if (storedName) {
                 appState.username = storedName;
@@ -547,10 +585,11 @@
                 appState.statusMessage = "Por favor, ingresa tu nombre para comenzar.";
             }
 
-            // 3. Inicializar Speech Recognition
+            // 3. Inicializar Speech Recognition y cargar voces TTS (necesario para la config de speakText)
             initSpeechRecognition();
+            window.speechSynthesis.onvoiceschanged = updateUI; // Refrescar UI si las voces cambian
 
-            // 4. Configurar Event Listeners (Reemplazo de onClick/onSubmit)
+            // 4. Configurar Event Listeners
             appState.dom.voiceToggleButton.addEventListener('click', handleVoiceToggle);
             appState.dom.nameForm.addEventListener('submit', handleNameSubmit);
             
@@ -564,10 +603,10 @@
         // Ejecutar la inicialización cuando el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', initializeApp);
 
-        // Agregamos un listener de limpieza para revocar la URL del Blob al salir o recargar
+        // Agregamos un listener para cancelar el TTS si el usuario recarga
         window.addEventListener('beforeunload', () => {
-            if (appState.responseAudioUrl) {
-                URL.revokeObjectURL(appState.responseAudioUrl);
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
             }
         });
 
