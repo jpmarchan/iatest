@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente Legal de Voz STT y TTS Nativo</title>
-    <!-- Carga de Tailwind CSS CDN -->
+    <title>"El Inmortal" Asistente Legal de Voz STT y TTS Nativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Importar la fuente Inter y estilos base */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
@@ -21,10 +18,11 @@
             padding: 1.5rem;
             background-image: linear-gradient(to top right, #eef2ff, #f3f4f6);
         }
-        /* Ajuste de grosor de trazo para los iconos de Lucide */
+        
         .lucide {
             stroke-width: 2.5;
         }
+        
         /* Animación personalizada para el botón de grabación */
         @keyframes pulse-red {
             0% {
@@ -40,6 +38,7 @@
         .animate-pulse-red {
             animation: pulse-red 2s infinite;
         }
+        
         /* Clase de animación para el icono de voz activa */
         .speak-active {
             filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
@@ -53,23 +52,49 @@
                 opacity: 1;
             }
         }
+
+        /* ESTILO PARA EL FONDO DEL CONTENEDOR PRINCIPAL */
+        #voiceAssistantCard {
+            /* Ruta de la imagen subida por el usuario */
+            background-image: 
+                /* Degradado oscuro semi-transparente. */
+                linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+                /* Imagen de fondo. Asumo que 'profe.jpeg' está disponible. */
+                url('profe.jpeg');
+                
+            /* PROPIEDADES CLAVE PARA LA SOLUCIÓN */
+            background-size: cover; /* Evita la deformación, cubre el área */
+            background-position: center;
+            /* FIN DE PROPIEDADES CLAVE */
+            
+            background-blend-mode: lighten; /* Mezcla el fondo blanco con la imagen */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Se remueve el fondo blanco directo para que la imagen sea visible a través del blend mode */
+        #voiceAssistantCard.bg-white {
+            background-color: transparent !important;
+        }
     </style>
 </head>
 <body>
 
     <!-- Contenedor Principal con Estilo de Tarjeta Moderna -->
+    <!-- Se mantiene la clase bg-white, pero se anula en CSS con !important para usar el background-image con blend-mode -->
     <div id="voiceAssistantCard" class="bg-white shadow-2xl rounded-2xl p-6 md:p-10 w-full max-w-xl transition-all duration-500 border-t-8 border-blue-600/70 backdrop-blur-sm">
         
         <!-- Header -->
         <div class="text-center mb-8">
-            <i data-lucide="gavel" class="lucide w-12 h-12 text-blue-600 mx-auto mb-2"></i>
-            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Asistente Legal de Voz</h1>
-            <p class="text-sm text-gray-500 mt-1">Soluciones rápidas con STT y TTS nativo (Voz a Texto a Voz).</p>
+            <i data-lucide="gavel" class="lucide w-12 h-12 text-blue-800 mx-auto mb-2"></i>
+            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">"El Inmortal"</h1>
+            <h2 class="text-xl font-semibold text-blue-700 mt-1">Asistente Legal</h2>
+            <p class="text-sm text-gray-600 mt-2">Soluciones rápidas con STT y TTS nativo (Voz a Texto a Voz).</p>
         </div>
 
         <!-- Área de Usuario -->
-        <div id="usernameDisplay" class="hidden text-base text-gray-600 mb-6 flex items-center justify-center bg-gray-50 p-3 rounded-xl border border-gray-200">
-            <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span id="currentUsername" class="font-bold text-blue-700 ml-2"></span>
+        <div id="usernameDisplay" class="hidden text-base text-gray-700 mb-6 flex items-center justify-center bg-blue-50/70 p-3 rounded-xl border border-blue-200">
+            <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span id="currentUsername" class="font-bold text-blue-800 ml-2"></span>
         </div>
         
         <!-- Formulario de Nombre -->
@@ -92,7 +117,7 @@
         </div>
 
         <!-- Transcripción mostrada (Consulta del Usuario) -->
-        <div id="transcriptionBox" class="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-8 border border-blue-200 shadow-lg hidden">
+        <div id="transcriptionBox" class="bg-blue-100/80 text-blue-900 p-4 rounded-xl text-sm mb-8 border border-blue-300 shadow-lg hidden">
             <span class="font-bold block mb-1">Tu consulta (Vista Previa):</span> 
             <span id="transcriptionPreview" class="block italic text-gray-700"></span>
         </div>
@@ -116,11 +141,11 @@
         </div>
 
         <!-- Respuesta de Texto y TTS (Nuevo) -->
-        <div id="responseContainer" class="mt-10 pt-5 border-t border-gray-100 hidden">
+        <div id="responseContainer" class="mt-10 pt-5 border-t border-gray-300/50 hidden">
             <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center">
                 <i id="voiceIcon" data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del Asesor IA
             </h3>
-            <div id="responseText" class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200 shadow-inner text-gray-800 min-h-[6rem] whitespace-pre-wrap">
+            <div id="responseText" class="bg-gray-100/70 p-4 rounded-xl text-sm border border-gray-200 shadow-inner text-gray-800 min-h-[6rem] whitespace-pre-wrap">
                 <!-- El texto de la respuesta se insertará aquí -->
             </div>
         </div>
@@ -129,7 +154,7 @@
 
     <script>
         // URL de tu endpoint de backend que recibe TEXTO y devuelve TEXTO JSON
-        const TEXT_QUERY_URL = "https://286272f9581f.ngrok-free.app/api/text_query";
+        const TEXT_QUERY_URL = "https://36fdfbcf7c71.ngrok-free.app/api/text_query";
         
         // El nombre de la propiedad en el JSON que contendrá la respuesta de texto.
         const RESPONSE_TEXT_FIELD = "response_text";
@@ -146,6 +171,7 @@
             finalTranscript: "", // Para guardar la transcripción final más reciente
             recognition: null, // Para STT
             utterance: null, // Para TTS
+            ttsVoices: [], // Lista de voces cargadas
             // Referencias DOM
             dom: {
                 statusArea: null,
@@ -156,9 +182,9 @@
                 micIcon: null,
                 loaderIcon: null,
                 stopIcon: null,
-                responseContainer: null, // Nuevo
-                responseText: null, // Nuevo
-                voiceIcon: null, // Nuevo
+                responseContainer: null, 
+                responseText: null, 
+                voiceIcon: null, 
                 nameForm: null,
                 nameInput: null,
                 usernameDisplay: null,
@@ -167,6 +193,42 @@
         };
 
         // === UTILIDADES INTERNAS ===
+
+        /**
+         * Selecciona una voz en español que no sea la predeterminada (intenta ser masculina).
+         * @returns {SpeechSynthesisVoice|null} La voz seleccionada o null si solo hay una o ninguna.
+         */
+        function getSpanishPreferredVoice() {
+            const targetLangPrefix = 'es';
+            const voices = appState.ttsVoices.length > 0 ? appState.ttsVoices : window.speechSynthesis.getVoices();
+            
+            // 1. Filtrar todas las voces en español
+            let spanishVoices = voices.filter(voice => voice.lang.startsWith(targetLangPrefix));
+            
+            if (spanishVoices.length === 0) {
+                return null;
+            }
+
+            // 2. Intentar buscar una voz con una clave masculina en el nombre (heurística)
+            const maleKeywords = ['male', 'jorge', 'juan', 'alberto', 'david', 'pablo', 'sergio']; 
+            
+            let selectedVoice = spanishVoices.find(voice => 
+                maleKeywords.some(keyword => voice.name.toLowerCase().includes(keyword))
+            );
+
+            // 3. Si no se encuentra una clave masculina, seleccionar la segunda voz disponible 
+            //    (asumiendo que la primera es la que por defecto es femenina)
+            if (!selectedVoice && spanishVoices.length > 1) {
+                selectedVoice = spanishVoices[1]; 
+            }
+
+            // 4. Si solo hay una voz o ninguna de las anteriores se ha seleccionado, usar la primera.
+            if (!selectedVoice) {
+                 selectedVoice = spanishVoices[0];
+            }
+
+            return selectedVoice;
+        }
 
         /**
          * Actualiza el estado visual de la UI basándose en el estado global.
@@ -193,7 +255,8 @@
                 statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner bg-red-100 text-red-800 border border-red-300';
                 return;
             } else {
-                voiceToggleButton.disabled = isLoading || isSpeaking || !appState.recognition;
+                // El botón solo se deshabilita si está cargando. Si está hablando, se permite hacer clic para CANCELAR.
+                voiceToggleButton.disabled = isLoading || !appState.recognition; 
             }
 
             // 2. Transcripción
@@ -207,17 +270,17 @@
             // Limpiar clases de fondo del status area
             statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner';
 
-            let statusClasses = 'bg-gray-100 text-gray-600 border border-gray-200';
+            let statusClasses = 'bg-gray-100/70 text-gray-700 border border-gray-300';
             const isError = statusMessage.includes('❌') || statusMessage.includes('Error') || statusMessage.includes('⚠️');
 
             if (isLoading) {
-                statusClasses = 'bg-blue-100 text-blue-800 border border-blue-300';
+                statusClasses = 'bg-blue-100/80 text-blue-800 border border-blue-300';
             } else if (isRecording) {
-                statusClasses = 'bg-red-100 text-red-800 border border-red-300';
+                statusClasses = 'bg-red-100/80 text-red-800 border border-red-300';
             } else if (isError) {
-                statusClasses = 'bg-red-100 text-red-800 border border-red-300';
+                statusClasses = 'bg-red-100/80 text-red-800 border border-red-300';
             } else if (isSpeaking) {
-                statusClasses = 'bg-green-100 text-green-800 border border-green-300';
+                statusClasses = 'bg-green-100/80 text-green-800 border border-green-300';
             }
             statusArea.classList.add(...statusClasses.split(' '));
 
@@ -231,11 +294,16 @@
             loaderIcon.classList.add('hidden');
             stopIcon.classList.add('hidden');
 
-            if (isLoading || isSpeaking) {
+            if (isLoading) {
                 voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
-                voiceToggleButton.title = isSpeaking ? "Asesorando..." : "Procesando...";
-                loaderIcon.classList.remove('hidden'); // Usamos el loader para ambos estados de espera/habla
-                voiceIcon.classList.toggle('speak-active', isSpeaking);
+                voiceToggleButton.title = "Procesando...";
+                loaderIcon.classList.remove('hidden'); 
+            } else if (isSpeaking) {
+                voiceToggleButton.classList.add('bg-green-600', 'hover:bg-green-700', 'shadow-xl', 'shadow-green-500/50');
+                voiceToggleButton.title = "Presiona para INTERRUMPIR y hacer una nueva consulta";
+                // Usamos el mic como un icono de 'play/speak'
+                micIcon.classList.remove('hidden'); 
+                voiceIcon.classList.toggle('speak-active', true);
             } else if (isRecording) {
                 voiceToggleButton.classList.add('bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-xl', 'shadow-red-500/50');
                 voiceToggleButton.title = "Presiona para DETENER la grabación y enviar";
@@ -286,6 +354,21 @@
         }
 
         /**
+         * Cancela la síntesis de voz y restablece el estado de la UI a la espera.
+         */
+        function stopSpeaking() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            appState.isSpeaking = false;
+            appState.finalTranscript = ""; 
+            appState.transcriptionPreview = "";
+            appState.hasSent = false;
+            appState.statusMessage = "Asesoría interrumpida. Presiona el micrófono para INICIAR una nueva consulta.";
+            updateUI();
+        }
+
+        /**
          * Utiliza la API de Síntesis de Voz del navegador para leer el texto.
          * @param {string} text El texto a leer.
          */
@@ -296,30 +379,41 @@
                     window.speechSynthesis.cancel();
                 }
 
+                // Obtener la voz preferida (masculina/alternativa)
+                const selectedVoice = getSpanishPreferredVoice();
+                
                 // Configuración de la voz
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'es-ES'; 
-                // Opcional: Intentar encontrar una voz en español
-                const voices = window.speechSynthesis.getVoices();
-                const spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
-                if (spanishVoice) {
-                    utterance.voice = spanishVoice;
+                
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                    // Es importante establecer lang a la lengua real de la voz para mejor calidad
+                    utterance.lang = selectedVoice.lang; 
+                    console.log(`TTS: Usando voz seleccionada: ${selectedVoice.name} (${selectedVoice.lang})`);
+                } else {
+                    // Fallback si no hay voces específicas, usa el idioma genérico
+                    utterance.lang = 'es-ES'; 
+                    console.log("TTS: Usando configuración de idioma genérica (es-ES).");
                 }
+
 
                 appState.utterance = utterance;
 
                 // Eventos de inicio y fin
                 utterance.onstart = () => {
                     appState.isSpeaking = true;
-                    appState.statusMessage = "🔊 El Asesor IA está hablando...";
+                    appState.statusMessage = "🔊 El Asesor IA está hablando. Presiona el botón para INTERRUMPIR.";
                     updateUI();
                 };
 
                 utterance.onend = () => {
-                    appState.isSpeaking = false;
-                    appState.statusMessage = "✅ Asesoría finalizada. Presiona el micrófono para otra consulta.";
-                    appState.finalTranscript = ""; // Limpiar después de la respuesta completa
-                    updateUI();
+                    // Solo si termina naturalmente y no fue por cancel
+                    if (appState.isSpeaking) {
+                        appState.isSpeaking = false;
+                        appState.statusMessage = "✅ Asesoría finalizada. Presiona el micrófono para otra consulta.";
+                        appState.finalTranscript = ""; // Limpiar después de la respuesta completa
+                        updateUI();
+                    }
                 };
 
                 utterance.onerror = (event) => {
@@ -469,25 +563,31 @@
         }
 
         /**
-         * Lógica principal para iniciar o detener la grabación.
+         * Lógica principal para iniciar, detener la grabación o interrumpir el TTS.
          */
         function handleVoiceToggle() {
-            if (!appState.recognition || appState.isLoading || appState.isSpeaking) return;
+            if (!appState.recognition || appState.isLoading) return;
             if (!appState.username) {
                 showCustomError("❌ Por favor, ingresa tu nombre antes de comenzar.");
                 return;
             }
 
-            if (appState.isRecording) {
+            if (appState.isSpeaking) {
+                // CASO NUEVO: Interrumpir TTS y volver a estado de espera
+                console.log("Interrumpiendo TTS...");
+                stopSpeaking();
+
+            } else if (appState.isRecording) {
                 // Caso 1: Estaba grabando -> Detener y ENVIAR
                 appState.isRecording = false;
                 appState.statusMessage = "Deteniendo, esperando transcripción final...";
                 updateUI();
                 
+                // Abortar para capturar la transcripción final y liberar el micrófono
                 try {
-                    appState.recognition.stop(); 
+                    appState.recognition.abort(); 
                 } catch (e) {
-                    console.warn("Error al llamar a recognition.stop().", e);
+                    console.warn("Error al llamar a recognition.abort().", e);
                 }
 
                 // CRUCIAL: Retraso para capturar el último onresult final
@@ -551,6 +651,23 @@
                 updateUI();
             }
         }
+        
+        /**
+         * Carga las voces TTS de forma asíncrona.
+         */
+        function loadTTSVoices() {
+            // Asegúrate de que las voces estén cargadas. A veces se necesita un retraso.
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                appState.ttsVoices = voices;
+                updateUI(); 
+            } else if (window.speechSynthesis.onvoiceschanged !== null) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    appState.ttsVoices = window.speechSynthesis.getVoices();
+                    updateUI();
+                };
+            }
+        }
 
         /**
          * Inicializa la aplicación: obtiene referencias DOM y carga el estado inicial.
@@ -585,10 +702,10 @@
                 appState.statusMessage = "Por favor, ingresa tu nombre para comenzar.";
             }
 
-            // 3. Inicializar Speech Recognition y cargar voces TTS (necesario para la config de speakText)
+            // 3. Inicializar Speech Recognition y cargar voces TTS
             initSpeechRecognition();
-            window.speechSynthesis.onvoiceschanged = updateUI; // Refrescar UI si las voces cambian
-
+            loadTTSVoices(); // Intenta cargar las voces
+            
             // 4. Configurar Event Listeners
             appState.dom.voiceToggleButton.addEventListener('click', handleVoiceToggle);
             appState.dom.nameForm.addEventListener('submit', handleNameSubmit);
