@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +9,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #eef2ff; /* Un azul claro muy suave */
+            background-color: #eef2ff;
+            /* Un azul claro muy suave */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -18,36 +21,41 @@
             padding: 1.5rem;
             background-image: linear-gradient(to top right, #eef2ff, #f3f4f6);
         }
-        
+
         .lucide {
             stroke-width: 2.5;
         }
-        
+
         /* Animación personalizada para el botón de grabación */
         @keyframes pulse-red {
             0% {
                 box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
             }
+
             70% {
                 box-shadow: 0 0 0 25px rgba(239, 68, 68, 0);
             }
+
             100% {
                 box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
             }
         }
+
         .animate-pulse-red {
             animation: pulse-red 2s infinite;
         }
-        
+
         /* Clase de animación para el icono de voz activa */
         .speak-active {
             filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
             animation: pulse-blue 1s infinite alternate;
         }
+
         @keyframes pulse-blue {
             from {
                 opacity: 0.7;
             }
+
             to {
                 opacity: 1;
             }
@@ -56,18 +64,20 @@
         /* ESTILO PARA EL FONDO DEL CONTENEDOR PRINCIPAL */
         #voiceAssistantCard {
             /* Ruta de la imagen subida por el usuario */
-            background-image: 
+            background-image:
                 /* Degradado oscuro semi-transparente. */
                 linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
                 /* Imagen de fondo. Asumo que 'profe.jpeg' está disponible. */
                 url('profe.jpeg');
-                
+
             /* PROPIEDADES CLAVE PARA LA SOLUCIÓN */
-            background-size: cover; /* Evita la deformación, cubre el área */
+            background-size: cover;
+            /* Evita la deformación, cubre el área */
             background-position: center;
             /* FIN DE PROPIEDADES CLAVE */
-            
-            background-blend-mode: lighten; /* Mezcla el fondo blanco con la imagen */
+
+            background-blend-mode: lighten;
+            /* Mezcla el fondo blanco con la imagen */
             position: relative;
             z-index: 10;
         }
@@ -78,12 +88,14 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Contenedor Principal con Estilo de Tarjeta Moderna -->
     <!-- Se mantiene la clase bg-white, pero se anula en CSS con !important para usar el background-image con blend-mode -->
-    <div id="voiceAssistantCard" class="bg-white shadow-2xl rounded-2xl p-6 md:p-10 w-full max-w-xl transition-all duration-500 border-t-8 border-blue-600/70 backdrop-blur-sm">
-        
+    <div id="voiceAssistantCard"
+        class="bg-white shadow-2xl rounded-2xl p-6 md:p-10 w-full max-w-xl transition-all duration-500 border-t-8 border-blue-600/70 backdrop-blur-sm">
+
         <!-- Header -->
         <div class="text-center mb-8">
             <i data-lucide="gavel" class="lucide w-12 h-12 text-blue-800 mx-auto mb-2"></i>
@@ -93,44 +105,41 @@
         </div>
 
         <!-- Área de Usuario -->
-        <div id="usernameDisplay" class="hidden text-base text-gray-700 mb-6 flex items-center justify-center bg-blue-50/70 p-3 rounded-xl border border-blue-200">
-            <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span id="currentUsername" class="font-bold text-blue-800 ml-2"></span>
+        <div id="usernameDisplay"
+            class="hidden text-base text-gray-700 mb-6 flex items-center justify-center bg-blue-50/70 p-3 rounded-xl border border-blue-200">
+            <i data-lucide="user-check" class="lucide w-5 h-5 mr-2 text-green-600"></i> Usuario Activo: <span
+                id="currentUsername" class="font-bold text-blue-800 ml-2"></span>
         </div>
-        
+
         <!-- Formulario de Nombre -->
         <form id="nameForm" class="mt-4 mb-6 flex gap-3">
-            <input
-                id="nameInput"
-                type="text"
-                placeholder="Ingresa tu nombre para identificarte..."
-                required
-                class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition duration-200 shadow-inner"
-            />
-            <button type="submit" class="bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg active:scale-95">
+            <input id="nameInput" type="text" placeholder="Ingresa tu nombre para identificarte..." required
+                class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition duration-200 shadow-inner" />
+            <button type="submit"
+                class="bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg active:scale-95">
                 <i data-lucide="send" class="lucide w-5 h-5"></i>
             </button>
         </form>
 
         <!-- Área de Estado -->
-        <div id="statusArea" class="p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner">
+        <div id="statusArea"
+            class="p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner">
             <p id="statusMessage" class="text-base leading-relaxed">Presiona el micrófono para INICIAR la consulta.</p>
         </div>
 
         <!-- Transcripción mostrada (Consulta del Usuario) -->
-        <div id="transcriptionBox" class="bg-blue-100/80 text-blue-900 p-4 rounded-xl text-sm mb-8 border border-blue-300 shadow-lg hidden">
-            <span class="font-bold block mb-1">Tu consulta (Vista Previa):</span> 
+        <div id="transcriptionBox"
+            class="bg-blue-100/80 text-blue-900 p-4 rounded-xl text-sm mb-8 border border-blue-300 shadow-lg hidden">
+            <span class="font-bold block mb-1">Tu consulta (Vista Previa):</span>
             <span id="transcriptionPreview" class="block italic text-gray-700"></span>
         </div>
-        
+
         <!-- Controles de Voz -->
         <div class="flex justify-center">
             <!-- Botón de Iniciar/Detener (Toggle Mode) -->
-            <button
-                id="voiceToggleButton"
+            <button id="voiceToggleButton"
                 class="p-7 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white w-24 h-24 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
-                title="Presiona para INICIAR la grabación"
-                disabled
-            >
+                title="Presiona para INICIAR la grabación" disabled>
                 <!-- Icono de Micrófono por defecto -->
                 <i id="micIcon" data-lucide="mic" class="lucide w-10 h-10"></i>
                 <!-- El icono de carga se mostrará en el estado 'loading' -->
@@ -143,9 +152,11 @@
         <!-- Respuesta de Texto y TTS (Nuevo) -->
         <div id="responseContainer" class="mt-10 pt-5 border-t border-gray-300/50 hidden">
             <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center">
-                <i id="voiceIcon" data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del Asesor IA
+                <i id="voiceIcon" data-lucide="volume-2" class="lucide w-6 h-6 mr-3 text-blue-600"></i> Respuesta del
+                Asesor IA
             </h3>
-            <div id="responseText" class="bg-gray-100/70 p-4 rounded-xl text-sm border border-gray-200 shadow-inner text-gray-800 min-h-[6rem] whitespace-pre-wrap">
+            <div id="responseText"
+                class="bg-gray-100/70 p-4 rounded-xl text-sm border border-gray-200 shadow-inner text-gray-800 min-h-[6rem] whitespace-pre-wrap">
                 <!-- El texto de la respuesta se insertará aquí -->
             </div>
         </div>
@@ -154,8 +165,8 @@
 
     <script>
         // URL de tu endpoint de backend que recibe TEXTO y devuelve TEXTO JSON
-        const TEXT_QUERY_URL = "https://36fdfbcf7c71.ngrok-free.app/api/text_query";
-        
+        const TEXT_QUERY_URL = "https://06955aa06b28.ngrok-free.app/api/text_query";
+
         // El nombre de la propiedad en el JSON que contendrá la respuesta de texto.
         const RESPONSE_TEXT_FIELD = "response_text";
 
@@ -182,9 +193,9 @@
                 micIcon: null,
                 loaderIcon: null,
                 stopIcon: null,
-                responseContainer: null, 
-                responseText: null, 
-                voiceIcon: null, 
+                responseContainer: null,
+                responseText: null,
+                voiceIcon: null,
                 nameForm: null,
                 nameInput: null,
                 usernameDisplay: null,
@@ -200,31 +211,49 @@
          */
         function getSpanishPreferredVoice() {
             const targetLangPrefix = 'es';
+            // Nota: Usar window.speechSynthesis.getVoices() requiere que se haya cargado previamente.
+            // Asumo que 'appState.ttsVoices' ya contiene las voces cargadas.
             const voices = appState.ttsVoices.length > 0 ? appState.ttsVoices : window.speechSynthesis.getVoices();
-            
+
             // 1. Filtrar todas las voces en español
             let spanishVoices = voices.filter(voice => voice.lang.startsWith(targetLangPrefix));
-            
+
             if (spanishVoices.length === 0) {
+                // No hay voces en español disponibles
+                console.warn("No se encontraron voces en español.");
                 return null;
             }
 
-            // 2. Intentar buscar una voz con una clave masculina en el nombre (heurística)
-            const maleKeywords = ['male', 'jorge', 'juan', 'alberto', 'david', 'pablo', 'sergio']; 
-            
-            let selectedVoice = spanishVoices.find(voice => 
-                maleKeywords.some(keyword => voice.name.toLowerCase().includes(keyword))
-            );
+            // 2. Palabras clave masculinas reforzadas para aumentar la heurística
+            // Se eliminan términos genéricos ('google', 'microsoft', 'es-es', 'zira') que a menudo 
+            // se usan en voces femeninas de alta calidad, y se priorizan términos de género y nombres.
+            const maleKeywords = [
+                'male', 'hombre', 'masculina', // Nuevos términos de género
+                'jorge', 'juan', 'pablo', 'sergio', 'david',
+                'daniel', 'diego', 'carlos', 'antonio', 'raul', // Nombres masculinos comunes añadidos
+            ].map(k => k.toLowerCase()); // Convertir a minúsculas para la comparación
 
-            // 3. Si no se encuentra una clave masculina, seleccionar la segunda voz disponible 
-            //    (asumiendo que la primera es la que por defecto es femenina)
-            if (!selectedVoice && spanishVoices.length > 1) {
-                selectedVoice = spanishVoices[1]; 
+            let selectedVoice = null;
+
+            // 3. Buscar la primera voz que contenga una de las palabras clave masculinas
+            // Hacemos una búsqueda más exhaustiva.
+            for (const voice of spanishVoices) {
+                const voiceNameLower = voice.name.toLowerCase();
+                const isMale = maleKeywords.some(keyword => voiceNameLower.includes(keyword));
+
+                if (isMale) {
+                    // ¡Encontrada una voz que probablemente sea masculina!
+                    selectedVoice = voice;
+                    console.log(`Voz masculina seleccionada por heurística: ${voice.name}`);
+                    break;
+                }
             }
 
-            // 4. Si solo hay una voz o ninguna de las anteriores se ha seleccionado, usar la primera.
+            // 4. Contingencia: Si no se encuentra una clave masculina, usar la primera voz disponible.
+            // Esta es la voz por defecto del navegador para el idioma.
             if (!selectedVoice) {
-                 selectedVoice = spanishVoices[0];
+                selectedVoice = spanishVoices[0];
+                console.warn(`No se encontró una voz masculina específica. Usando la voz por defecto: ${selectedVoice.name}`);
             }
 
             return selectedVoice;
@@ -235,9 +264,9 @@
          */
         function updateUI() {
             const { isRecording, isLoading, isSpeaking, statusMessage, transcriptionPreview, username } = appState;
-            const { 
-                statusArea, statusMessage: statusMsgEl, transcriptionBox, transcriptionPreview: transcriptPrevEl, 
-                voiceToggleButton, micIcon, loaderIcon, stopIcon, 
+            const {
+                statusArea, statusMessage: statusMsgEl, transcriptionBox, transcriptionPreview: transcriptPrevEl,
+                voiceToggleButton, micIcon, loaderIcon, stopIcon,
                 nameForm, usernameDisplay, currentUsername, voiceIcon, responseContainer
             } = appState.dom;
 
@@ -256,7 +285,7 @@
                 return;
             } else {
                 // El botón solo se deshabilita si está cargando. Si está hablando, se permite hacer clic para CANCELAR.
-                voiceToggleButton.disabled = isLoading || !appState.recognition; 
+                voiceToggleButton.disabled = isLoading || !appState.recognition;
             }
 
             // 2. Transcripción
@@ -266,7 +295,7 @@
 
             // 3. Área de Estado y Mensaje
             statusMsgEl.textContent = statusMessage;
-            
+
             // Limpiar clases de fondo del status area
             statusArea.className = 'p-4 rounded-xl text-center font-semibold transition-colors duration-300 mb-6 min-h-[4.5rem] flex items-center justify-center shadow-inner';
 
@@ -286,10 +315,10 @@
 
             // 4. Botón de Toggle y Iconos
             voiceToggleButton.classList.remove(
-                'bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-red-500/50', 
+                'bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-red-500/50',
                 'bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/50', 'bg-green-600', 'hover:bg-green-700'
             );
-            
+
             micIcon.classList.add('hidden');
             loaderIcon.classList.add('hidden');
             stopIcon.classList.add('hidden');
@@ -297,12 +326,12 @@
             if (isLoading) {
                 voiceToggleButton.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-xl', 'shadow-blue-500/50');
                 voiceToggleButton.title = "Procesando...";
-                loaderIcon.classList.remove('hidden'); 
+                loaderIcon.classList.remove('hidden');
             } else if (isSpeaking) {
                 voiceToggleButton.classList.add('bg-green-600', 'hover:bg-green-700', 'shadow-xl', 'shadow-green-500/50');
                 voiceToggleButton.title = "Presiona para INTERRUMPIR y hacer una nueva consulta";
                 // Usamos el mic como un icono de 'play/speak'
-                micIcon.classList.remove('hidden'); 
+                micIcon.classList.remove('hidden');
                 voiceIcon.classList.toggle('speak-active', true);
             } else if (isRecording) {
                 voiceToggleButton.classList.add('bg-red-600', 'hover:bg-red-700', 'animate-pulse-red', 'shadow-xl', 'shadow-red-500/50');
@@ -326,7 +355,7 @@
          */
         function showCustomError(message) {
             console.error(message);
-            
+
             // 1. Limpieza de estado
             appState.isLoading = false;
             appState.isRecording = false;
@@ -338,7 +367,7 @@
             if (appState.recognition) {
                 try {
                     appState.recognition.abort();
-                } catch (e) {}
+                } catch (e) { }
             }
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
@@ -361,7 +390,7 @@
                 window.speechSynthesis.cancel();
             }
             appState.isSpeaking = false;
-            appState.finalTranscript = ""; 
+            appState.finalTranscript = "";
             appState.transcriptionPreview = "";
             appState.hasSent = false;
             appState.statusMessage = "Asesoría interrumpida. Presiona el micrófono para INICIAR una nueva consulta.";
@@ -381,18 +410,18 @@
 
                 // Obtener la voz preferida (masculina/alternativa)
                 const selectedVoice = getSpanishPreferredVoice();
-                
+
                 // Configuración de la voz
                 const utterance = new SpeechSynthesisUtterance(text);
-                
+
                 if (selectedVoice) {
                     utterance.voice = selectedVoice;
                     // Es importante establecer lang a la lengua real de la voz para mejor calidad
-                    utterance.lang = selectedVoice.lang; 
+                    utterance.lang = selectedVoice.lang;
                     console.log(`TTS: Usando voz seleccionada: ${selectedVoice.name} (${selectedVoice.lang})`);
                 } else {
                     // Fallback si no hay voces específicas, usa el idioma genérico
-                    utterance.lang = 'es-ES'; 
+                    utterance.lang = 'es-ES';
                     console.log("TTS: Usando configuración de idioma genérica (es-ES).");
                 }
 
@@ -439,14 +468,14 @@
                 if (!cleanedText && !appState.isLoading) showCustomError("⚠️ No se detectó ninguna consulta de voz válida.");
                 return;
             }
-            
+
             appState.hasSent = true;
             appState.isLoading = true;
-            appState.isRecording = false; 
+            appState.isRecording = false;
             appState.statusMessage = "✅ Transcripción capturada. Enviando al Asesor IA...";
             appState.dom.responseText.textContent = ''; // Limpiar respuesta anterior
             updateUI();
-            
+
             try {
                 // 1. Envío de la consulta de texto
                 const response = await fetch(TEXT_QUERY_URL, {
@@ -454,9 +483,9 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         query_text: cleanedText,
-                        username: appState.username, 
+                        username: appState.username,
                     }),
                 });
 
@@ -464,14 +493,14 @@
                     let errorDetails = `Error del servidor (Status: ${response.status}).`;
                     try {
                         const errorJson = await response.json();
-                        errorDetails = errorJson.message || JSON.stringify(errorJson); 
-                    } catch {}
+                        errorDetails = errorJson.message || JSON.stringify(errorJson);
+                    } catch { }
                     throw new Error(errorDetails);
                 }
-                
+
                 // 2. Esperamos una respuesta JSON con el texto
                 const responseJson = await response.json();
-                const aiResponseText = responseJson[RESPONSE_TEXT_FIELD]; 
+                const aiResponseText = responseJson[RESPONSE_TEXT_FIELD];
 
                 if (!aiResponseText || typeof aiResponseText !== 'string') {
                     throw new Error("Respuesta de texto de la IA no válida o vacía.");
@@ -479,7 +508,7 @@
 
                 // 3. Mostrar Texto en la UI
                 appState.dom.responseText.textContent = aiResponseText;
-                
+
                 // 4. Iniciar Síntesis de Voz
                 appState.isLoading = false;
                 appState.statusMessage = "Respuesta recibida. Iniciando síntesis de voz...";
@@ -505,19 +534,19 @@
                 showCustomError("⚠️ Navegador no compatible con Web Speech API para STT.");
                 return;
             }
-            
+
             const recognition = appState.recognition || new webkitSpeechRecognition();
-            recognition.continuous = true; 
+            recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = 'es-ES'; 
+            recognition.lang = 'es-ES';
             appState.recognition = recognition;
-            
+
             appState.finalTranscript = "";
 
             recognition.onresult = (event) => {
                 let finalTranscriptPart = '';
                 let interimTranscriptPart = '';
-                
+
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         finalTranscriptPart += event.results[i][0].transcript;
@@ -525,7 +554,7 @@
                         interimTranscriptPart += event.results[i][0].transcript;
                     }
                 }
-                
+
                 if (finalTranscriptPart) {
                     // Solo agregamos un espacio si ya hay texto final acumulado
                     if (appState.finalTranscript.length > 0) {
@@ -533,13 +562,13 @@
                     }
                     appState.finalTranscript += finalTranscriptPart;
                 }
-                
+
                 appState.transcriptionPreview = appState.finalTranscript + interimTranscriptPart;
                 updateUI();
             };
 
             recognition.onerror = (event) => {
-                if (appState.hasSent) return; 
+                if (appState.hasSent) return;
 
                 if (event.error === 'not-allowed') {
                     showCustomError("❌ Acceso al micrófono bloqueado. Debes permitirlo en la configuración.");
@@ -582,10 +611,10 @@
                 appState.isRecording = false;
                 appState.statusMessage = "Deteniendo, esperando transcripción final...";
                 updateUI();
-                
+
                 // Abortar para capturar la transcripción final y liberar el micrófono
                 try {
-                    appState.recognition.abort(); 
+                    appState.recognition.abort();
                 } catch (e) {
                     console.warn("Error al llamar a recognition.abort().", e);
                 }
@@ -593,7 +622,7 @@
                 // CRUCIAL: Retraso para capturar el último onresult final
                 setTimeout(() => {
                     let textToSend = appState.finalTranscript.trim();
-                    
+
                     if (!textToSend && appState.transcriptionPreview.trim()) {
                         // Fallback por si la API no actualizó finalTranscript a tiempo
                         textToSend = appState.transcriptionPreview.trim();
@@ -605,15 +634,15 @@
                     } else {
                         showCustomError("⚠️ No se detectó ninguna consulta de voz válida.");
                     }
-                    
+
                     appState.transcriptionPreview = "";
                     updateUI();
-                }, 100); 
+                }, 100);
 
 
             } else {
                 // Caso 2: No estaba grabando -> Iniciar grabación
-                
+
                 // Limpiar estados anteriores
                 if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
                 appState.isSpeaking = false;
@@ -621,11 +650,11 @@
                 appState.dom.responseText.textContent = ''; // Limpiar texto de respuesta
                 appState.hasSent = false;
                 appState.finalTranscript = "";
-                
+
                 try {
                     // Abortar cualquier estado anterior antes de empezar (limpia el motor STT)
                     if (appState.recognition) appState.recognition.abort();
-                    
+
                     appState.recognition.start();
                     appState.isRecording = true;
                     appState.statusMessage = "🔴 Grabando Audio. Presiona de nuevo para DETENER y enviar.";
@@ -651,7 +680,7 @@
                 updateUI();
             }
         }
-        
+
         /**
          * Carga las voces TTS de forma asíncrona.
          */
@@ -660,7 +689,7 @@
             const voices = window.speechSynthesis.getVoices();
             if (voices.length > 0) {
                 appState.ttsVoices = voices;
-                updateUI(); 
+                updateUI();
             } else if (window.speechSynthesis.onvoiceschanged !== null) {
                 window.speechSynthesis.onvoiceschanged = () => {
                     appState.ttsVoices = window.speechSynthesis.getVoices();
@@ -682,17 +711,17 @@
             appState.dom.micIcon = document.getElementById('micIcon');
             appState.dom.loaderIcon = document.getElementById('loaderIcon');
             appState.dom.stopIcon = document.getElementById('stopIcon');
-            
+
             // Referencias para la nueva respuesta de texto/TTS
             appState.dom.responseContainer = document.getElementById('responseContainer');
             appState.dom.responseText = document.getElementById('responseText');
             appState.dom.voiceIcon = document.getElementById('voiceIcon');
-            
+
             appState.dom.nameForm = document.getElementById('nameForm');
             appState.dom.nameInput = document.getElementById('nameInput');
             appState.dom.usernameDisplay = document.getElementById('usernameDisplay');
             appState.dom.currentUsername = document.getElementById('currentUsername');
-            
+
             // 2. Cargar Estado Inicial
             const storedName = localStorage.getItem('v2v_username');
             if (storedName) {
@@ -705,14 +734,14 @@
             // 3. Inicializar Speech Recognition y cargar voces TTS
             initSpeechRecognition();
             loadTTSVoices(); // Intenta cargar las voces
-            
+
             // 4. Configurar Event Listeners
             appState.dom.voiceToggleButton.addEventListener('click', handleVoiceToggle);
             appState.dom.nameForm.addEventListener('submit', handleNameSubmit);
-            
+
             // 5. Renderizado Inicial
             updateUI();
-            
+
             // Inicializar Lucide Icons después de que el DOM esté listo
             lucide.createIcons();
         }
@@ -730,4 +759,5 @@
     </script>
 
 </body>
+
 </html>
